@@ -7,4 +7,5 @@ gemspec
 
 gem 'pry'
 gem 'active_model_serializers'
+gem 'fast_jsonapi'
 gem 'benchmark-ips'

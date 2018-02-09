@@ -93,18 +93,21 @@ See `benchmark/run.rb`
 
 ```
 Warming up --------------------------------------
-            #to_hash    13.173k i/100ms
-       O::Serializer     4.652k i/100ms
-                 AMS   342.000  i/100ms
+            #to_hash    12.722k i/100ms
+       O::Serializer     4.425k i/100ms
+                 AMS   330.000  i/100ms
+        fast_jsonapi     4.323k i/100ms
 Calculating -------------------------------------
-            #to_hash    140.705k (±13.4%) i/s -    698.169k in   5.072368s
-       O::Serializer     45.944k (±14.8%) i/s -    227.948k in   5.105587s
-                 AMS      3.368k (±15.1%) i/s -     16.416k in   5.016766s
+            #to_hash    139.382k (± 6.5%) i/s -    699.710k in   5.042120s
+       O::Serializer     46.346k (± 4.5%) i/s -    234.525k in   5.071141s
+                 AMS      3.359k (± 3.3%) i/s -     16.830k in   5.015951s
+        fast_jsonapi     44.541k (± 4.5%) i/s -    224.796k in   5.057236s
 
 Comparison:
-            #to_hash:   140705.3 i/s
-       O::Serializer:    45943.8 i/s - 3.06x  slower
-                 AMS:     3368.5 i/s - 41.77x  slower
+            #to_hash:   139381.5 i/s
+       O::Serializer:    46346.3 i/s - 3.01x  slower
+        fast_jsonapi:    44540.7 i/s - 3.13x  slower
+                 AMS:     3359.0 i/s - 41.49x  slower
 ```
 
 ## Development

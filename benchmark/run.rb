@@ -2,6 +2,7 @@ require 'bundler/setup'
 
 require 'o/serializer'
 require 'active_model_serializers'
+require 'fast_jsonapi'
 require 'benchmark/ips'
 
 class User
@@ -22,6 +23,20 @@ class User
       profile: profile ? profile.to_hash : nil,
       tags: tags.map(&:to_hash)
     }
+  end
+
+  # FastJsonapi doesn't support custom methods
+  def is_active
+    active?
+  end
+
+  # FastJsonapi uses FKs for optimizations
+  def profile_id
+    profile.id if profile
+  end
+
+  def tag_ids
+    tags.map(&:id)
   end
 end
 
@@ -48,7 +63,7 @@ class Tag
   include ActiveModel::Model
   include ActiveModel::Serialization
 
-  attr_accessor :name
+  attr_accessor :id, :name
 
   def to_hash
     {
@@ -57,12 +72,12 @@ class Tag
   end
 end
 
-tag1 = Tag.new(name: 'tag1')
-tag2 = Tag.new(name: 'tag2')
-tag3 = Tag.new(name: 'tag3')
+tag1 = Tag.new(id: 1, name: 'tag1')
+tag2 = Tag.new(id: 2, name: 'tag2')
+tag3 = Tag.new(id: 3, name: 'tag3')
 
-profile1 = Profile.new(first_name: 'fname1', last_name: 'lname1')
-profile2 = Profile.new(first_name: 'fname2')
+profile1 = Profile.new(id: 1, first_name: 'fname1', last_name: 'lname1')
+profile2 = Profile.new(id: 2, first_name: 'fname2')
 
 user1 = User.new(email: 'email1', profile: profile1, tags: [tag1, tag2])
 user2 = User.new(email: 'email2', profile: profile2, tags: [tag2, tag3])
@@ -110,10 +125,27 @@ module AMS
     def is_active
       object.active?
     end
+  end
+end
 
-    def id
-      object.id
-    end
+module FastJsonApi
+  class TagSerializer
+    include FastJsonapi::ObjectSerializer
+    attributes :name
+  end
+
+  class ProfileSerializer
+    include FastJsonapi::ObjectSerializer
+    attributes :first_name, :last_name, :avatar
+  end
+
+  class UserSerializer
+    include FastJsonapi::ObjectSerializer
+
+    attributes :id, :is_active, :email
+
+    has_one :profile, serializer: ProfileSerializer
+    has_many :tags, serializer: TagSerializer
   end
 end
 
@@ -132,5 +164,14 @@ Benchmark.ips do |x|
     ActiveModel::Serializer::CollectionSerializer.new(users, serializer: AMS::UserSerializer).as_json
   end
 
+  x.report 'fast_jsonapi' do
+    FastJsonApi::UserSerializer.new(users).serializable_hash
+  end
+
   x.compare!
 end
+
+# p users.map(&:to_hash)
+# p O::Many[O::UserSerializer].call(users)
+# p ActiveModel::Serializer::CollectionSerializer.new(users, serializer: AMS::UserSerializer).as_json
+# p FastJsonApi::UserSerializer.new(users).serializable_hash
